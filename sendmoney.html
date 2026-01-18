@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- META Y BOOTSTRAP -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alke Wallet - Transferir</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-dark py-3 sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white" href="menu.html">← Menú Principal</a>
+        </div>
+    </nav>
+    
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-9">
+                <div class="card p-5 shadow-lg">
+                    <h2 class="text-center mb-5 fw-bold fs-2 text-primary">Transferir Fondos</h2>
+                    
+                    <!-- FORM TRANSFERENCIA -->
+                    <form id="transferForm">
+                        <!-- BUSCADOR CON AUTOCOMPLETAR -->
+                        <div class="mb-4">
+                            <label class="form-label h5 fw-semibold mb-3">Buscar Contacto</label>
+                            <input type="text" class="form-control form-control-lg" id="buscarContacto" 
+                                   placeholder="Escribe nombre o email..." oninput="filtrarContactos()">
+                        </div>
+                        
+                        <!-- LISTA CONTACTOS DINÁMICA -->
+                        <div class="mb-4">
+                            <ul class="list-group list-group-flush shadow-sm rounded-3 overflow-hidden" 
+                                id="listaContactos" style="max-height: 250px; overflow-y: auto;">
+                                <!-- SE LLENA CON JS -->
+                            </ul>
+                        </div>
+                        
+                        <!-- MONTO CON SALDO -->
+                        <div class="mb-4">
+                            <label class="form-label h5 fw-semibold mb-3">Monto a Transferir</label>
+                            <div class="input-group input-group-lg mb-2">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control form-control-lg text-center fs-3 fw-bold p-4" 
+                                       id="montoTransfer" min="1" max="50000" step="0.01" placeholder="0.00" required>
+                            </div>
+                            <small class="text-muted d-block">
+                                Saldo disponible: $<span id="saldoTransfer" class="fw-bold fs-5">10,000</span>
+                            </small>
+                        </div>
+                        
+                        <!-- BOTONES -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-4 fs-5 mb-3">
+                            <i class="bi bi-arrow-right-circle me-2"></i>
+                            Confirmar Transferencia
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-lg w-100 py-3 fs-6" 
+                                onclick="nuevoContacto()">
+                            <i class="bi bi-person-plus me-2"></i>
+                            + Nuevo Contacto
+                        </button>
+                    </form>
+                    
+                    <!-- MENSAJES DINÁMICOS -->
+                    <div id="mensajeTransfer" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+
+
+    <script>
+    /*DATOS GLOBALES - CONTACTOS Y SALDO */
+    let contactos = JSON.parse(localStorage.getItem('contactos')) || [
+        { nombre: 'Gato Juanito', email: 'gatojuanito@email.com', ultimo: 500 },
+        { nombre: 'Edgar Poe', email: 'edgar@email.com', ultimo: 200 },
+        { nombre: 'Carlitos Lechuga', email: 'lechuga@email.com', ultimo: 150 },
+        { nombre: 'María Olga', email: 'hermanita@email.com', ultimo: 300 }
+    ];
+    
+    let saldo = parseFloat(localStorage.getItem('saldo')) || 10000;
+    document.getElementById('saldoTransfer').textContent = saldo.toLocaleString();
+    
+    /* AUTOCOMPLETAR BUSCADOR - FUNCIONAL REAL */
+    function filtrarContactos() {
+        const termino = document.getElementById('buscarContacto').value.toLowerCase();
+        const contenedor = document.getElementById('listaContactos');
+        contenedor.innerHTML = ''; // Limpia lista
+        
+        /* FILTRA CONTACTOS POR NOMBRE O EMAIL */
+        const filtrados = contactos.filter(contacto => 
+            contacto.nombre.toLowerCase().includes(termino) || 
+            contacto.email.toLowerCase().includes(termino)
+        );
+        
+        /* MUESTRA "NO ENCONTRADO" */
+        if (filtrados.length === 0 && termino.trim()) {
+            contenedor.innerHTML = `
+                <li class="list-group-item text-center text-muted p-4 border-0">
+                    <i class="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
+                    No se encontraron contactos
+                </li>
+            `;
+            return;
+        }
+        
+        /* CREA CONTACTOS DINÁMICOS CON BOTÓN ELIMINAR */
+        filtrados.forEach((contacto, indexGlobal) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center px-4 py-3 border-0 hover-shadow';
+            li.innerHTML = `
+                <div class="flex-grow-1 me-3">
+                    <strong class="d-block fs-5">${contacto.nombre}</strong>
+                    <small class="text-muted">${contacto.email}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-secondary fs-6 me-2">Último: $${contacto.ultimo}</span>
+                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarContacto(${indexGlobal})" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            contenedor.appendChild(li);
+        });
+    }
+    
+    /*NUEVO CONTACTO - FUNCIONAL COMPLETO */
+    function nuevoContacto() {
+        /* HTML SI NO EXISTE */
+        if (!document.getElementById('modalContacto')) {
+            document.body.insertAdjacentHTML('beforeend', `
+                <div class="modal fade" id="modalContacto" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-person-plus me-2"></i>
+                                    Nuevo Contacto
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formContacto">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Nombre Completo</label>
+                                        <input type="text" class="form-control" id="nombreNuevo" placeholder="Ej: Juan Pérez" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Email</label>
+                                        <input type="email" class="form-control" id="emailNuevo" placeholder="ejemplo@email.com" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    Cancelar
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="guardarContacto()">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+        
+        /* MUESTRA MODAL */
+        const modal = new bootstrap.Modal(document.getElementById('modalContacto'));
+        modal.show();
+        
+        /* FOCUS AUTOMÁTICO */
+        document.getElementById('nombreNuevo').focus();
+    }
+    
+
+
+    /* GUARDAR CONTACTO - VALIDADO */
+    function guardarContacto() {
+        const nombre = document.getElementById('nombreNuevo').value.trim();
+        const email = document.getElementById('emailNuevo').value.trim();
+        
+        /* VALIDACIONES */
+        if (!nombre || nombre.length < 2) {
+            alert('Nombre debe tener al menos 2 caracteres');
+            return;
+        }
+        if (!email || !email.includes('@')) {
+            alert('Email inválido');
+            return;
+        }
+        
+
+
+        /* AGREGA Y GUARDA */
+        contactos.push({
+            nombre: nombre,
+            email: email,
+            ultimo: 0
+        });
+        localStorage.setItem('contactos', JSON.stringify(contactos));
+        
+        /* CIERRA MODAL Y ACTUALIZA */
+        bootstrap.Modal.getInstance(document.getElementById('modalContacto')).hide();
+        document.getElementById('buscarContacto').value = ''; // Limpia buscador
+        filtrarContactos(); // Refresca lista
+        
+        /* LIMPIA FORM MODAL */
+        document.getElementById('nombreNuevo').value = '';
+        document.getElementById('emailNuevo').value = '';
+        
+        /* NOTIFICACIÓN */
+        mostrarMensaje('¡Contacto agregado correctamente!', 'success');
+    }
+
+
+    
+    /* ELIMINAR CONTACTO CON CONFIRM*/
+    function eliminarContacto(index) {
+        if (confirm(`¿Eliminar "${contactos[index].nombre}"?\nEsta acción no se puede deshacer.`)) {
+            contactos.splice(index, 1);
+            localStorage.setItem('contactos', JSON.stringify(contactos));
+            filtrarContactos();
+            mostrarMensaje('Contacto eliminado', 'warning');
+        }
+    }
+
+
+    
+    /* TRANSFERENCIA CON VALIDACIONES COMPLETAS*/
+    document.getElementById('transferForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const monto = parseFloat(document.getElementById('montoTransfer').value);
+        const inputMonto = document.getElementById('montoTransfer');
+        
+        /* VALIDACIONES PASO A PASO */
+        if (!inputMonto.value.trim()) {
+            mostrarError('Ingresa un monto');
+            return;
+        }
+        
+        if (monto <= 0 || monto > 50000) {
+            mostrarError('Monto entre $1 y $50,000');
+            return;
+        }
+        
+        if (monto > saldo) {
+            mostrarError(`¡Fondos insuficientes! Solo tienes $${saldo.toLocaleString()}`);
+            return;
+        }
+        
+        /* EJECUTA TRANSFERENCIA */
+        saldo -= monto;
+        localStorage.setItem('saldo', saldo);
+
+        // BUSCA CONTACTO SELECCIONADO (último visible)
+                const ultimoVisible = document.querySelector('#listaContactos li strong')?.textContent || 'Contacto';
+
+                // AGREGA MOVIMIENTO TRANSFERENCIA
+                const nuevoMovimiento = {
+                    fecha: new Date().toISOString(),
+                    descripcion: 'Transferencia enviada',
+                    tipo: 'egreso',
+                    operacion: 'transferencia',
+                    monto: monto,
+                    saldoPosterior: saldo,
+                    contacto: ultimoVisible
+                };
+                historial = JSON.parse(localStorage.getItem('historialMovimientos')) || [];
+                historial.unshift(nuevoMovimiento);
+                localStorage.setItem('historialMovimientos', JSON.stringify(historial));
+
+                // BROADCAST UPDATE
+                if ('BroadcastChannel' in window) {
+                    new BroadcastChannel('alke-wallet').postMessage('historial-updated');
+                }
+
+        
+        /* ÉXITO CON ANIMACIÓN */
+        mostrarMensaje(
+            `¡Transferencia de $${monto.toLocaleString()} exitosa!<br><strong>Nuevo saldo: $${saldo.toLocaleString()}</strong>`,
+            'success'
+        );
+        
+        /* RESET FORM */
+        inputMonto.value = '';
+    });
+
+
+    
+    /*UTILIDADES - MENSAJES Y ERRORES */
+    function mostrarMensaje(texto, tipo = 'info') {
+        const contenedor = document.getElementById('mensajeTransfer');
+        contenedor.innerHTML = `
+            <div class="alert alert-${tipo === 'success' ? 'success' : tipo === 'warning' ? 'warning' : 'danger'} 
+                   alert-dismissible fade show fs-5" role="alert">
+                <i class="bi bi-${tipo === 'success' ? 'check-circle-fill' : tipo === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill'} 
+                   fs-3 me-2"></i>
+                ${texto}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+    
+    function mostrarError(texto) {
+        mostrarMensaje(texto, 'danger');
+    }
+    
+    /*INICIALIZACIÓN - CARGA CONTACTOS*/
+    document.addEventListener('DOMContentLoaded', function() {
+        filtrarContactos(); // MUESTRA TODOS AL INICIO
+    });
+    </script>
+</body>
+</html>

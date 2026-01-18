@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alke Wallet - Iniciar Sesión</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+
+
+<body>
+    <!-- NAVBAR   -->
+    <nav class="navbar navbar-expand-lg navbar-dark py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4" href="index.html">Alke Wallet</a>
+        </div>
+    </nav>
+    
+    
+
+    <!-- FORM LOGIN CENTRALIZADO -->
+    <div class="container d-flex justify-content-center align-items-center min-vh-100 py-5">
+        <div class="card p-5 shadow-lg col-md-6 col-lg-4">
+            <!-- TÍTULO CON ÍCONO  -->
+            <h2 class="text-center mb-4 fw-bold fs-2 text-primary">Bienvenido de Vuelta!</h2>
+
+
+            
+            <!-- FORM CON VALIDACIÓN -->
+            <form id="loginForm">
+                <!-- INPUT USUARIO -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold fs-5 mb-2">Usuario</label>
+                    <input type="text" class="form-control form-control-lg" required>
+                </div>
+                <!-- INPUT PASSWORD -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold fs-5 mb-2">Contraseña</label>
+                    <input type="password" class="form-control form-control-lg" required>
+                </div>
+                <!-- BOTÓN SUBMIT  -->
+                <button type="submit" class="btn btn-primary w-100 py-3 fs-5 mb-3">
+                    Entrar
+                </button>
+            </form>
+
+
+            
+            <!-- LINK DEMO PARA SALTARSE EL LOGIN-->
+            <div class="text-center">
+                <a href="menu.html" class="text-primary fw-medium">Demo Rápido</a>
+            </div>
+        </div>
+    </div>
+    
+
+
+
+    <!-- JS BOOTSTRAP + LOGIN SIMULADO -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+/* VALIDACIÓN CREDENCIALES - USUARIO: admin / PASS: 1234 */
+const credencialesValidas = {
+    usuario: 'admin',
+    password: '1234'
+};
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const usuario = document.getElementById('usuario')?.value || 
+                    document.querySelector('#loginForm input[type="text"]').value;
+    const password = document.getElementById('password')?.value || 
+                     document.querySelector('#loginForm input[type="password"]').value;
+    
+    /* VALIDACIÓN REAL CON MENSAJES */
+    if (usuario === credencialesValidas.usuario && password === credencialesValidas.password) {
+        localStorage.setUser = usuario; // GUARDA SESIÓN
+        alert('¡Login exitoso! Bienvenido ' + usuario);
+        window.location.href = 'menu.html';
+    } else {
+        /* ALERTA ROJA EN FORM */
+        const alerta = document.createElement('div');
+        alerta.className = 'alert alert-danger mt-3';
+        alerta.innerHTML = `
+            <i class="bi bi-x-circle me-2"></i>
+            Credenciales incorrectas.<br>
+            <small>Usuario: <strong>admin</strong> | Contraseña: <strong>1234</strong></small>
+        `;
+        document.querySelector('#loginForm').appendChild(alerta);
+        
+        // LIMPIA PASSWORD POR SEGURIDAD
+        document.querySelector('input[type="password"]').value = '';
+        setTimeout(() => alerta.remove(), 5000); // DESAPARECE 5 SEG
+    }
+});
+</script>
+
+</body>
+</html>
